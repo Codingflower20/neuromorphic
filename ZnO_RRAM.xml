@@ -1,0 +1,27 @@
+<Lems>
+    <ComponentType name="ZnOMemristor" extends="baseSynapse" description="ZnO RRAM Frequency-Locked Switch">
+        <Parameter name="a1" dimension="none"/>
+        <Parameter name="a2" dimension="none"/>
+        <Parameter name="b" dimension="none"/>
+        <Parameter name="alpha" dimension="none"/>
+        <Parameter name="beta" dimension="none"/>
+        <Parameter name="tau" dimension="time"/>
+        <Parameter name="xo" dimension="none"/>
+
+        <Exposure name="i" dimension="current"/>
+
+        <Dynamics>
+            <StateVariable name="xsv" dimension="none" exposure="xsv"/>
+            
+            <!-- Maxwell-Wagner Integration (Your Gx/Cx logic) -->
+            <!-- S(V1,V2) = alpha * sinh(beta * V) - (xsv / tau) -->
+            <TimeDerivative variable="xsv" value="alpha * sinh(beta * (v)) - (xsv / tau)"/>
+
+            <!-- Current Relationship (Your IVRel logic) -->
+            <!-- Incorporating your Schottky logic and Threshold (0.65) -->
+            <DerivedVariable name="i" exposure="i" value="(v >= 0) ? 
+                ((xsv > 0.65 ? 1 : -1) * a1 * xsv * (1 - exp(-b * v))) : 
+                (a2 * xsv * (1 - exp(b * v)))"/>
+        </Dynamics>
+    </ComponentType>
+</Lems>
