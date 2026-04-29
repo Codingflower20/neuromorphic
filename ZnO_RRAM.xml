@@ -1,10 +1,13 @@
 <Lems>
-    <!-- 1. Define Dimensions so OSB knows what is Voltage vs Current -->
+    <!-- 1. Dimensions: Essential for LEMS to understand physical units -->
     <Dimension name="voltage" m="1" l="2" t="-3" i="-1"/>
     <Dimension name="current" i="1"/>
     <Dimension name="time" t="1"/>
+    <Dimension name="none"/>
 
-    <ComponentType name="ZnOMemristor" extends="baseSynapse" description="ZnO RRAM Frequency-Locked Switch">
+    <!-- 2. ComponentType: The mathematical model of your ZnO Memristor -->
+    <!-- Removed 'extends="baseSynapse"' to keep it a standalone physical model -->
+    <ComponentType name="ZnOMemristor" description="ZnO RRAM Frequency-Locked Switch">
         <Parameter name="a1" dimension="none"/>
         <Parameter name="a2" dimension="none"/>
         <Parameter name="b" dimension="none"/>
@@ -13,15 +16,13 @@
         <Parameter name="tau" dimension="time"/>
         <Parameter name="xo" dimension="none"/>
 
-        <!-- 2. Exposure allows OSB to 'plot' these values -->
         <Exposure name="i" dimension="current"/>
         <Exposure name="xsv" dimension="none"/>
         
-        <!-- Requirement for 'baseSynapse' in LEMS -->
+        <!-- Requirement for external voltage input -->
         <Requirement name="v" dimension="voltage"/> 
 
         <Dynamics>
-            <!-- 3. Initialize the state variable with your xo parameter -->
             <StateVariable name="xsv" dimension="none" exposure="xsv"/>
             
             <OnStart>
@@ -36,5 +37,29 @@
                 ((xsv > 0.65 ? 1 : -1) * a1 * xsv * (1 - exp(-b * v))) : 
                 (a2 * xsv * (1 - exp(b * v)))"/>
         </Dynamics>
+    </ComponentType>
+
+    <!-- 3. Component Instance: Define your specific device parameters -->
+    <ZnOMemristor id="ZnO_Device_1" 
+                  a1="0.05" a2="0.01" b="0.4" 
+                  alpha="0.1" beta="0.5" 
+                  tau="10ms" xo="0.1"/>
+
+    <!-- 4. Simulation Target: Tells jNeuroML how long to run and what to save -->
+    <Target component="sim1"/>
+
+    <Simulation id="sim1" length="100ms" step="0.01ms" target="ZnO_Device_1">
+        <!-- Optional: Display traces during simulation if using a GUI -->
+        <Display id="d1" title="ZnO Current Trace" timeScale="1ms">
+            <Line id="i_trace" quantity="i" scale="1" color="#0000ff"/>
+        </Display>
+
+        <!-- CRITICAL: Saves the results to a file for your Python script to read -->
+        <OutputFile id="of0" fileName="results.dat">
+            <OutputColumn id="i_out" quantity="i"/>
+            <OutputColumn id="x_out" quantity="xsv"/>
+        </OutputFile>
+    </Simulation>
+</Lems>
     </ComponentType>
 </Lems>
